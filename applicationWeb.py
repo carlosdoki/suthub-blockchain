@@ -17,12 +17,13 @@ class Blockchain(Resource):
         args = parser.parse_args()
             
         idApolice = bytes(args["apoliceId"], encoding='utf-8')
+        print(contract.call().checkApoliceIdExists(idApolice))
         if (contract.functions.checkApoliceIdExists(idApolice).call()):
             tx_hash = web3.eth.getTransaction(args["transactionId"])
             if tx_hash == None:
                 return {'mensagem' :'transactionId invalido'}, 201
             else:
-                return {'mensagem' :'Apolice ja cadastrada'}, 200
+                return {'mensagem' :'Apolice e TransactionID validos'}, 200
         else:
             return {'mensagem' :'Apolice nao encontrada'}, 404
             
@@ -49,19 +50,21 @@ api.add_resource(Blockchain, '/blockchain')
 if __name__ == '__main__':
     
     #Rede Blockchain
-    ganache_url = "HTTP://127.0.0.1:7545"
+    ganache_url = "HTTP://127.0.0.1:8545"
+    #ganache_url ='http://52.234.224.83:8555/sandbox/b45e30bf12'
     web3 = Web3(Web3.HTTPProvider(ganache_url))
 
     #Pega o primeiro Account do BlockChain
     web3.eth.defaultAccount = web3.eth.accounts[0]
 
-    #Cria o SmartContract
-    abi = json.loads('[{"constant":false,"inputs":[],"name":"kill","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"apoliceid","type":"bytes32"}],"name":"checkApoliceIdExists","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"apolices","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"apoliceid","type":"bytes32"}],"name":"incluiApolice","outputs":[],"payable":true,"stateMutability":"payable","type":"function"},{"inputs":[],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"payable":true,"stateMutability":"payable","type":"fallback"}]')
-    bytecode = "6060604052341561000f57600080fd5b336000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055506103718061005e6000396000f30060606040526004361061006d576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff16806341c0e1b51461006f5780636537dc2b146100845780638da5cb5b146100c3578063906b749d14610118578063e7144e9014610157575b005b341561007a57600080fd5b610082610173565b005b341561008f57600080fd5b6100a9600480803560001916906020019091905050610204565b604051808215151515815260200191505060405180910390f35b34156100ce57600080fd5b6100d6610264565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b341561012357600080fd5b6101396004808035906020019091905050610289565b60405180826000191660001916815260200191505060405180910390f35b6101716004808035600019169060200190919050506102ad565b005b6000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff161415610202576000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16ff5b565b600080600090505b60018054905081101561025957826000191660018281548110151561022d57fe5b90600052602060002090015460001916141561024c576001915061025e565b808060010191505061020c565b600091505b50919050565b6000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b60018181548110151561029857fe5b90600052602060002090016000915090505481565b6102b681610204565b1515156102c257600080fd5b600180548060010182816102d691906102f4565b91600052602060002090016000839091909150906000191690555050565b81548183558181151161031b5781836000526020600020918201910161031a9190610320565b5b505050565b61034291905b8082111561033e576000816000905550600101610326565b5090565b905600a165627a7a723058204e8c9ea30147612fed3f9da0cd7afa764389ef725f5e44caeb5c9f7cce97ef9a0029"
-    Apolice = web3.eth.contract(abi=abi, bytecode=bytecode)
-    tx_hash = Apolice.constructor().transact()
+    # #Cria o SmartContract
+    abi = json.loads('[{"constant":false,"inputs":[],"name":"apolice","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"apoliceid","type":"bytes32"}],"name":"checkApoliceIdExists","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"apolices","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"apoliceid","type":"bytes32"}],"name":"incluiApolice","outputs":[],"payable":true,"stateMutability":"payable","type":"function"},{"payable":true,"stateMutability":"payable","type":"fallback"}]')
+    bytecode = "608060405234801561001057600080fd5b506102df806100206000396000f3fe60806040526004361061004a5760003560e01c806364dd881b1461004c5780636537dc2b146100635780638da5cb5b146100b6578063906b749d1461010d578063e7144e901461015c575b005b34801561005857600080fd5b5061006161018a565b005b34801561006f57600080fd5b5061009c6004803603602081101561008657600080fd5b81019080803590602001909291905050506101cc565b604051808215151515815260200191505060405180910390f35b3480156100c257600080fd5b506100cb610222565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b34801561011957600080fd5b506101466004803603602081101561013057600080fd5b8101908080359060200190929190505050610247565b6040518082815260200191505060405180910390f35b6101886004803603602081101561017257600080fd5b8101908080359060200190929190505050610268565b005b336000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff160217905550565b600080600090505b6001805490508110156102175782600182815481106101ef57fe5b9060005260206000200154141561020a57600191505061021d565b80806001019150506101d4565b50600090505b919050565b6000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b6001818154811061025457fe5b906000526020600020016000915090505481565b610271816101cc565b1561027b57600080fd5b60018190806001815401808255809150509060018203906000526020600020016000909192909190915055505056fea265627a7a7230582029b13ed9eba0cc43764dce594144d00a07b11b62b48aafd12717266881c5e98564736f6c63430005090032"
+    Greeter = web3.eth.contract(abi=abi, bytecode=bytecode)
+    tx_hash = Greeter.constructor().transact()
     tx_receipt = web3.eth.waitForTransactionReceipt(tx_hash)
     contract = web3.eth.contract(
+        # address = Web3.toChecksumAddress("0x17956ba5f4291844bc25aedb27e69bc11b5bda39"),
         address = tx_receipt.contractAddress,
         abi=abi
     )
