@@ -9,20 +9,9 @@ from json import dumps, loads, JSONEncoder, JSONDecoder
 app = Flask(__name__)
 api = Api(app)
 
-class PythonObjectEncoder(JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, (list, dict, str, unicode, int, float, bool, type(None))):
-            return JSONEncoder.default(self, obj)
-        return {'_python_object': pickle.dumps(obj)}
-
-def as_python_object(dct):
-    if '_python_object' in dct:
-        return pickle.loads(str(dct['_python_object']))
-    return dct
-
 class UnlockAccount(Resource):
     def get(self,account,password):
-        tx = web3.personal.unlockAccount(account, password)
+        tx = web3.personal.unlockAccount(web3.toChecksumAddress(account), password)
         if  tx == True:
            return {'mensagem' :'Conta desbloqueada com sucesso'}, 200
         else:
@@ -39,23 +28,6 @@ class CreateAccount(Resource):
             return {'mensagem' :'Erro ao criar Account'}, 201
         else:
             return {'account' : tx}, 200
-class ListAccount(Resource):
-    def get(self):
-        tx = web3.personal.listAccounts
-        if tx == None:
-            return {'mensagem' :'Erro ao listar os Accounts'}, 201
-        else:
-            retorno = "["
-            for x in tx:
-                if retorno != "[": 
-                    retorno += ","
-                retorno += "{\"accountid\":\"" + x + "\"}"
-            retorno += "]"
-            j = dumps(retorno, cls=PythonObjectEncoder)
-            print(j)
-            teste = loads(j, object_hook=as_python_object)
-            print(teste)
-            return {teste}, 200
 
 class Blockchain(Resource):
     
@@ -68,11 +40,13 @@ class Blockchain(Resource):
             
         idApolice = bytes(args["apoliceId"], encoding='utf-8')
         tx_hash = web3.eth.getTransaction(args["transactionId"])
-        print(tx_hash)
         if tx_hash == None:
             return {'mensagem' :'transactionId invalido'}, 201
         else:
-            return {'mensagem' :'TransactionID validos'}, 200
+            if ("'blockNumber': null" in tx_hash):
+                return {'mensagem' : 'Transacao nao validada no blockchain, aguarde'}, 202
+            else:
+                return {'mensagem' :'TransactionID validos'}, 200
             
     #POST inclusao da ApoliceID no BlockChain
     def post(self):
@@ -91,7 +65,6 @@ class Blockchain(Resource):
 api.add_resource(Blockchain, '/blockchain') 
 api.add_resource(UnlockAccount, '/account/unlock/<string:account>/<string:password>') 
 api.add_resource(CreateAccount, '/account/create') 
-api.add_resource(ListAccount, '/account/list') 
 
 if __name__ == '__main__':
     
@@ -188,7 +161,7 @@ if __name__ == '__main__':
     ]
     '''
     
-    address = Web3.toChecksumAddress("0x74ddc599633e53d5da1946a17fe8a0b8e1088d10") 
+    address = Web3.toChecksumAddress("0x37ad045e862e2ea1a6e889764a8961ca30e9e22f") 
     contract = web3.eth.contract(address, abi=abi)
     
     app.run(port='5002')
