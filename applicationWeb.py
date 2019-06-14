@@ -1,13 +1,21 @@
 import json
-import pickle
 from web3 import Web3
 from flask import Flask, request, jsonify
 from flask_restful import Resource, Api, reqparse
 from json import dumps, loads, JSONEncoder, JSONDecoder
 
-
 app = Flask(__name__)
 api = Api(app)
+
+#Rede Blockchain Azure
+ganache_url = "https://administrator.blockchain.azure.com:3200/xbd4H-LvvAWGbEghsGMST_FZ"      #Url do Azure - HTTPS (Access key 1) 
+address = Web3.toChecksumAddress("0x85f5f844e9e606c8985394f0213ca06ff87bc399")                #Chave da criada do SmartContract no Remix
+senha = "2Vx8shCDMnt6uMz69$"
+
+#Rede SandBox
+#ganache_url = "http://127.0.0.1:8545"
+#address = Web3.toChecksumAddress("0x17956ba5f4291844bc25aedb27e69bc11b5bda39")
+
 
 class UnlockAccount(Resource):
     def get(self,account,password):
@@ -17,6 +25,11 @@ class UnlockAccount(Resource):
         else:
            return {'mensagem' :'Erro ao desbloquear a Conta'}, 501
 
+class ListAccount(Resource):
+    def get(self):
+        tx = web3.eth.accounts[0]
+        return {'conta' :tx}, 200
+        
 class CreateAccount(Resource):
     def post(self):
         parser = reqparse.RequestParser()
@@ -37,7 +50,11 @@ class Blockchain(Resource):
         parser.add_argument("apoliceId")
         parser.add_argument("transactionId")
         args = parser.parse_args()
-            
+        
+        tx = web3.personal.unlockAccount(web3.toChecksumAddress(web3.eth.defaultAccount), senha)  
+        if  tx == False:
+           return {'mensagem' :'Erro ao desbloquear a Conta'}, 501
+
         idApolice = bytes(args["apoliceId"], encoding='utf-8')
         tx_hash = web3.eth.getTransaction(args["transactionId"])
         if tx_hash == None:
@@ -53,6 +70,11 @@ class Blockchain(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument("id")
         args = parser.parse_args()
+        
+        tx = web3.personal.unlockAccount(web3.toChecksumAddress(web3.eth.defaultAccount), senha)  
+        if  tx == False:
+           return {'mensagem' :'Erro ao desbloquear a Conta'}, 501
+        
         idApolice = bytes(args["id"], encoding='utf-8')
         txn0 = {'gas': 48000}
         tx_hash = contract.functions.incluiApolice(idApolice).transact(txn0)
@@ -65,11 +87,9 @@ class Blockchain(Resource):
 api.add_resource(Blockchain, '/blockchain') 
 api.add_resource(UnlockAccount, '/account/unlock/<string:account>/<string:password>') 
 api.add_resource(CreateAccount, '/account/create') 
+api.add_resource(ListAccount, '/account') 
 
 if __name__ == '__main__':
-    
-    #Rede Blockchain
-    ganache_url = "https://dokiteste2.blockchain.azure.com:3200/OEQQrIa6RDQ8we60GeES0Ofj"
     web3 = Web3(Web3.HTTPProvider(ganache_url))
 
     #Pega o primeiro Account do BlockChain
@@ -160,8 +180,6 @@ if __name__ == '__main__':
 	}
     ]
     '''
-    
-    address = Web3.toChecksumAddress("0x37ad045e862e2ea1a6e889764a8961ca30e9e22f") 
     contract = web3.eth.contract(address, abi=abi)
     
     app.run(port='5002')
