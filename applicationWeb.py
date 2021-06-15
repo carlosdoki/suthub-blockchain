@@ -9,8 +9,8 @@ api = Api(app)
 
 #Rede Blockchain Azure
 ganache_url = "https://administrator.blockchain.azure.com:3200/xbd4H-LvvAWGbEghsGMST_FZ"      #Url do Azure - HTTPS (Access key 1) 
-address = Web3.toChecksumAddress("0x85f5f844e9e606c8985394f0213ca06ff87bc399")                #Chave da criada do SmartContract no Remix
-senha = "2Vx8shCDMnt6uMz69$"
+address = Web3.toChecksumAddress("")                #Chave da criada do SmartContract no Remix
+senha = ""
 
 #Rede SandBox
 #ganache_url = "http://127.0.0.1:8545"
